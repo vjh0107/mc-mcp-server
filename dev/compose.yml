@@ -24,11 +24,13 @@ services:
       MEMORY: 2G
       # OPS is unusable here: resolving an offline name through Playerdb fails and halts startup.
       # Opping from the console after boot lets the server derive the offline UUID itself.
+      # gamerule is rejected for every rule name on 26.1, whatever the syntax, so these
+      # commands do the same job for a test world: no hostile mobs, no weather, always day.
       RCON_CMDS_STARTUP: |
         op ${BOT_USERNAME:-mcp_probe}
-        gamerule doDaylightCycle false
-        gamerule doWeatherCycle false
-        gamerule doMobSpawning false
+        difficulty peaceful
+        weather clear 1000000
+        time set day
     volumes:
       - data:/data
     healthcheck:
