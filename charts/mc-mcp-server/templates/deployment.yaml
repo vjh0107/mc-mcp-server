@@ -1,0 +1,126 @@
+{{- include "mc-mcp-server.validate" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mc-mcp-server.fullname" . }}
+  labels:
+    {{- include "mc-mcp-server.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "mc-mcp-server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "mc-mcp-server.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        {{- if and .Values.auth.enabled (not .Values.auth.existingSecret) }}
+        checksum/auth: {{ .Values.auth.token | sha256sum }}
+        {{- end }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "mc-mcp-server.serviceAccountName" . }}
+      automountServiceAccountToken: {{ include "mc-mcp-server.automountToken" . }}
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: mc-mcp-server
+          image: {{ include "mc-mcp-server.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.extraArgs }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: SHUTDOWN_READINESS_GRACE_SECONDS
+              value: {{ .Values.shutdown.readinessGraceSeconds | quote }}
+            - name: SHUTDOWN_DRAIN_TIMEOUT_SECONDS
+              value: {{ .Values.shutdown.drainTimeoutSeconds | quote }}
+            - name: MCP_PORT
+              value: "3000"
+            - name: MCP_BIND_HOST
+              value: 0.0.0.0
+            - name: MCP_PATH
+              value: {{ .Values.mcp.path | quote }}
+            - name: MCP_LOG_LEVEL
+              value: {{ .Values.mcp.logLevel | quote }}
+            {{- with .Values.minecraft.version }}
+            - name: MC_VERSION
+              value: {{ . | quote }}
+            {{- end }}
+            - name: MC_USERNAME_PREFIX
+              value: {{ .Values.minecraft.usernamePrefix | quote }}
+            {{- if include "mc-mcp-server.needsApiAccess" . }}
+            # Node trusts this file at startup, which removes the need for a bespoke HTTP client.
+            - name: NODE_EXTRA_CA_CERTS
+              value: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+            {{- end }}
+            - name: BOT_MAX
+              value: {{ .Values.bots.max | quote }}
+            - name: BOT_IDLE_TIMEOUT_SECONDS
+              value: {{ .Values.bots.idleTimeoutSeconds | quote }}
+            {{- if and .Values.auth.enabled .Values.auth.serviceAccounts.enabled }}
+            - name: SA_AUTH_ENABLED
+              value: "true"
+            - name: SA_AUTH_ALLOWED
+              value: {{ join "," .Values.auth.serviceAccounts.allowed | quote }}
+            {{- end }}
+            {{- if and .Values.auth.enabled (or .Values.auth.existingSecret .Values.auth.token) }}
+            - name: MCP_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mc-mcp-server.authSecretName" . }}
+                  key: {{ .Values.auth.secretKey }}
+            {{- end }}
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.probes.startup }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.probes.readiness }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.probes.liveness }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

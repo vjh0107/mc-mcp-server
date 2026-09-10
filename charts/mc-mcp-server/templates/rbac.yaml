@@ -1,0 +1,16 @@
+{{- if .Values.auth.serviceAccounts.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "mc-mcp-server.fullname" . }}-{{ .Release.Namespace }}-auth-delegator
+  labels:
+    {{- include "mc-mcp-server.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "mc-mcp-server.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}

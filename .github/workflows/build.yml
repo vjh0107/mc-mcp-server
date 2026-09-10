@@ -1,0 +1,109 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  REGISTRY: junhyung.cloud
+  IMAGE: junhyung.cloud/library/mc-mcp-server
+  # Charts must not share a repository with the image: the same tag overwrites the other.
+  CHART_REPO: oci://junhyung.cloud/library/charts
+  CHART_REPO_HOST: junhyung.cloud/library/charts
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      - name: tool docs match the code
+        run: |
+          pnpm docs:tools
+          git diff --exit-code -- README.md docs/tools.md \
+            || { echo "::error::tool docs are stale, run pnpm docs:tools and commit"; exit 1; }
+
+  publish:
+    needs: check
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Lets cosign fetch a short-lived certificate from Fulcio, so no key lives in the repo.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - id: tag
+        run: |
+          version=$(node -p "require('./package.json').version")
+          stamp=$(date -u +%Y%m%d%H%M%S)
+          sha=$(git rev-parse --short=8 HEAD)
+          case "$version" in *-*) sep=. ;; *) sep=- ;; esac
+          echo "value=${version}${sep}${stamp}.g${sha}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - uses: sigstore/cosign-installer@v3
+
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          provenance: mode=max
+          sbom: true
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.tag.outputs.value }}
+            ${{ env.IMAGE }}:latest
+          cache-from: type=registry,ref=${{ env.IMAGE }}:buildcache
+          cache-to: type=registry,ref=${{ env.IMAGE }}:buildcache,mode=max,image-manifest=true,oci-mediatypes=true
+
+      - name: sign image
+        run: cosign sign --yes "${{ env.IMAGE }}@${{ steps.build.outputs.digest }}"
+
+      - name: push chart
+        env:
+          # Never inline the secrets: bash expands the $ in a Harbor robot name.
+          REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+          TAG: ${{ steps.tag.outputs.value }}
+        run: |
+          helm lint charts/mc-mcp-server --set auth.token=lint-only
+          helm template charts/mc-mcp-server --set auth.token=lint-only > /dev/null
+          helm package charts/mc-mcp-server --version "$TAG" --app-version "$TAG" --destination dist-chart
+          printf '%s' "$REGISTRY_PASSWORD" \
+            | helm registry login "$REGISTRY" --username "$REGISTRY_USERNAME" --password-stdin
+          helm push "dist-chart/mc-mcp-server-$TAG.tgz" "$CHART_REPO" 2>&1 | tee push.log
+          digest=$(grep -o 'sha256:[0-9a-f]\{64\}' push.log | head -1)
+          test -n "$digest"
+          cosign sign --yes "$CHART_REPO_HOST/mc-mcp-server@$digest"
+
+      - run: |
+          {
+            echo "published \`${{ env.IMAGE }}:${{ steps.tag.outputs.value }}\`"
+            echo ""
+            echo "verify:"
+            echo '```'
+            echo "cosign verify ${{ env.IMAGE }}:${{ steps.tag.outputs.value }} \\"
+            echo "  --certificate-identity-regexp '^https://github.com/${{ github.repository }}/' \\"
+            echo "  --certificate-oidc-issuer https://token.actions.githubusercontent.com"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

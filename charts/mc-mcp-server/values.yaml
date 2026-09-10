@@ -1,0 +1,162 @@
+# Bot state lives in this process, so there can only be one replica. Anything above 1 fails to render.
+#
+# Sticky sessions, the usual answer in other MCP charts, do not help. What they pin is one client's
+# MCP session; what has to stay put here is the bot. A bot exists only on the pod that joined it,
+# and any agent may address it by name, so pinning the caller still lands on the wrong pod.
+# Scaling out would mean moving the bot runtime out of this pod.
+replicaCount: 1
+
+image:
+  registry: junhyung.cloud/library
+  repository: mc-mcp-server
+  # Empty falls back to Chart.appVersion. A promotion swaps only this value.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: junhyung-cloud
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+  # This server does not call the Kubernetes API, so there is no reason to mount a token.
+  automountToken: false
+
+# Shared secret bearer token. The chart never generates one: a value that changes every render
+# leaves ArgoCD permanently OutOfSync. Set existingSecret or token; leaving both empty fails.
+auth:
+  enabled: true
+  # An in-cluster agent already carries a service account token. Verifying it with a TokenReview
+  # removes the need to distribute a shared secret, and the caller's name lands in join-server's
+  # owner field. Enabling this adds a ClusterRoleBinding to system:auth-delegator.
+  serviceAccounts:
+    enabled: false
+    # namespace:name entries. Empty admits any authenticated service account.
+    allowed: []
+  # Name of an existing Secret. When set, the chart creates none.
+  existingSecret: ""
+  secretKey: token
+  # Plaintext token for convenience. Use existingSecret anywhere real.
+  token: ""
+
+mcp:
+  # Path the MCP endpoint is served at; clients reach http://<service>/<path>.
+  path: /mcp
+  logLevel: info
+
+# The caller names the server on every join-server call. No default server lives here.
+minecraft:
+  # Fill in only to pin a protocol version. Empty follows whatever the server reports.
+  version: ""
+  # A username becomes <prefix>_<bot name>, truncated to 16 characters.
+  usernamePrefix: mcp
+
+bots:
+  # How many bots may be connected at once.
+  # Measured on an idle flat world at view-distance 6: 116MiB with none, 157MiB with four,
+  # 206MiB with eight. The first bot costs about 90MiB of minecraft-data; each one after is
+  # roughly 10MiB. A world that loads more chunks costs more. Raise resources alongside this.
+  max: 8
+  # A bot leaves on its own this long after its last tool call. 0 disables it; clean up by hand.
+  idleTimeoutSeconds: 1800
+
+service:
+  type: ClusterIP
+  port: 80
+  # Where annotations like tailscale.com/expose: "true" go.
+  annotations: {}
+
+# Enable when Prometheus should scrape this. /metrics is served without a token:
+# no bot name or chat text appears in the metrics, so in-cluster exposure is enough.
+metrics:
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    scrapeTimeout: 10s
+    # Labels the Prometheus instance selects on, e.g. release: kube-prometheus-stack
+    labels: {}
+
+# On SIGTERM readiness drops first so endpoints stop routing here, in-flight tool calls are
+# allowed to finish, and only then do the bots leave. terminationGracePeriodSeconds has to
+# cover readinessGrace + drainTimeout.
+shutdown:
+  readinessGraceSeconds: 5
+  drainTimeoutSeconds: 30
+terminationGracePeriodSeconds: 45
+
+# Enable only when MCP clients outside the cluster need to reach this.
+# The shared token then becomes the only gate, so this refuses to render with auth disabled.
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  host: ""
+  path: /
+  pathType: Prefix
+  tls: []
+
+# Off by default. Enabled, only the listed namespaces may reach the MCP port.
+networkPolicy:
+  enabled: false
+  allowedNamespaces: []
+
+# Eight bots come to a little over 200MiB by the measurement above; requests sits near that and
+# limits leaves headroom. Node is single-threaded, so concurrent pathfinding saturates CPU before
+# memory. No CPU limit on purpose.
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 512Mi
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+podAnnotations: {}
+podLabels: {}
+
+# Extra environment variables. A matching name overrides what the chart set.
+extraEnv: []
+
+# CLI flags the chart does not model, passed straight through, e.g. ["--log-level", "debug"]
+extraArgs: []
+
+# Exposed whole so a slow cluster can stretch them.
+# Ready with no bots connected: restarting the pod over a failed join would hide the reason.
+probes:
+  startup:
+    httpGet:
+      path: /healthz
+      port: http
+    periodSeconds: 2
+    failureThreshold: 30
+  readiness:
+    httpGet:
+      path: /readyz
+      port: http
+    periodSeconds: 10
+  liveness:
+    httpGet:
+      path: /healthz
+      port: http
+    periodSeconds: 30
+    timeoutSeconds: 5

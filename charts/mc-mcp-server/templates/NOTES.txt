@@ -1,0 +1,26 @@
+{{ include "mc-mcp-server.fullname" . }} is up.
+
+Reach it from inside the cluster at:
+
+  http://{{ include "mc-mcp-server.fullname" . }}.{{ .Release.Namespace }}.svc{{ if ne (int .Values.service.port) 80 }}:{{ .Values.service.port }}{{ end }}{{ .Values.mcp.path }}
+
+Register it with a client:
+{{- if .Values.auth.enabled }}
+
+  TOKEN=$(kubectl -n {{ .Release.Namespace }} get secret {{ include "mc-mcp-server.authSecretName" . }} -o jsonpath='{.data.{{ .Values.auth.secretKey }}}' | base64 -d)
+  claude mcp add --transport http mc-mcp-server \
+    http://{{ include "mc-mcp-server.fullname" . }}.{{ .Release.Namespace }}.svc{{ if ne (int .Values.service.port) 80 }}:{{ .Values.service.port }}{{ end }}{{ .Values.mcp.path }} \
+    -H "Authorization: Bearer $TOKEN"
+{{- else }}
+
+  claude mcp add --transport http mc-mcp-server \
+    http://{{ include "mc-mcp-server.fullname" . }}.{{ .Release.Namespace }}.svc{{ if ne (int .Values.service.port) 80 }}:{{ .Values.service.port }}{{ end }}{{ .Values.mcp.path }}
+
+Warning: auth.enabled is off, so anyone who can reach this port can drive the bots.
+{{- end }}
+
+Every join-server call names the server to connect to, for example:
+
+  join-server(name: "probe", host: "game-velocity.mc-dev.svc")
+
+That server has to run offline-mode for a bot to get in.

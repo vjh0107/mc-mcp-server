@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "mc-mcp-server.fullname" . }}-test
+  labels:
+    {{- include "mc-mcp-server.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: hook-succeeded
+spec:
+  restartPolicy: Never
+  enableServiceLinks: false
+  automountServiceAccountToken: false
+  {{- with .Values.imagePullSecrets }}
+  imagePullSecrets:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  securityContext:
+    {{- toYaml .Values.podSecurityContext | nindent 4 }}
+  containers:
+    - name: handshake
+      image: {{ include "mc-mcp-server.image" . }}
+      imagePullPolicy: {{ .Values.image.pullPolicy }}
+      securityContext:
+        {{- toYaml .Values.securityContext | nindent 8 }}
+      command:
+        - node
+        - -e
+        - |
+          const main = async () => {
+          const base = process.env.TARGET;
+          const headers = { 'content-type': 'application/json', accept: 'application/json, text/event-stream' };
+          if (process.env.TOKEN) headers.authorization = `Bearer ${process.env.TOKEN}`;
+
+          const fail = (message) => { console.error(message); process.exit(1); };
+
+          const health = await fetch(`${base}/healthz`);
+          if (!health.ok) fail(`healthz answered ${health.status}`);
+
+          const response = await fetch(`${base}${process.env.MCP_PATH}`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list' }),
+          });
+          if (!response.ok) fail(`tools/list answered ${response.status}`);
+
+          const body = await response.text();
+          const payload = JSON.parse(body.startsWith('event:') ? body.slice(body.indexOf('{')) : body);
+          const tools = payload.result?.tools ?? [];
+          if (!tools.some((tool) => tool.name === 'join-server')) fail(`join-server missing from ${tools.length} tools`);
+
+          console.log(`ok: ${tools.length} tools, join-server present`);
+          };
+          main().catch((error) => { console.error(error); process.exit(1); });
+      env:
+        - name: TARGET
+          value: http://{{ include "mc-mcp-server.fullname" . }}.{{ .Release.Namespace }}.svc:{{ .Values.service.port }}
+        - name: MCP_PATH
+          value: {{ .Values.mcp.path | quote }}
+        {{- if .Values.auth.enabled }}
+        - name: TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "mc-mcp-server.authSecretName" . }}
+              key: {{ .Values.auth.secretKey }}
+        {{- end }}
