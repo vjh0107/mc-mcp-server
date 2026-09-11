@@ -38,11 +38,13 @@ jobs:
         env:
           FORCED: ${{ github.event.forced }}
           BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          EMPTY_SHA: '0000000000000000000000000000000000000000'
         run: |
-          case "$FORCED$BASE" in
-            true*|''|0000000000000000000000000000000000000000) node scripts/check-version.ts ;;
-            *) node scripts/check-version.ts "$BASE" ;;
-          esac
+          if [ "$FORCED" = true ] || [ -z "$BASE" ] || [ "$BASE" = "$EMPTY_SHA" ]; then
+            node scripts/check-version.ts
+          else
+            node scripts/check-version.ts "$BASE"
+          fi
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test
