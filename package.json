@@ -1,6 +1,6 @@
 {
   "name": "mc-mcp-server",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Mineflayer-backed MCP server that runs inside a Kubernetes cluster",
   "license": "MIT",
   "type": "module",
@@ -17,7 +17,8 @@
     "docs:tools": "node scripts/generate-tool-docs.ts",
     "lint": "eslint .",
     "test": "node --test \"test/**/*.test.ts\"",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "check:version": "node scripts/check-version.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/node": "^2.0.0",

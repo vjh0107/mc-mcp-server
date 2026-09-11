@@ -24,6 +24,14 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # The published tag is built from package.json, so a chart that disagrees would claim a
+      # version it was never released as. On a pull request the base branch is the comparison;
+      # on a push it is the commit that was replaced.
+      - name: version is consistent and was raised
+        run: |
+          base="${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}"
+          case "$base" in ''|0000000000000000000000000000000000000000) node scripts/check-version.ts ;;
+                          *) node scripts/check-version.ts "$base" ;; esac
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test
