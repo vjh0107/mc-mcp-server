@@ -54,7 +54,7 @@ Environment variables are the defaults; the matching flag overrides one.
 
 <!-- BEGIN GENERATED TOOLS -->
 
-53 tools in total.
+58 tools in total.
 
 **Sessions**: `join-server`, `leave-server`, `list-bots`, `get-bot-status`
 
@@ -62,7 +62,7 @@ Environment variables are the defaults; the matching flag overrides one.
 
 **Server interaction**: `run-command`, `switch-server`, `wait-for-chat`, `wait-ticks`, `detect-gamemode`, `complete-command`
 
-**Movement**: `get-position`, `move-to-position`, `look-at`, `jump`, `move-in-direction`, `fly-to`
+**Movement**: `get-position`, `move-to-position`, `look-at`, `jump`, `move-in-direction`, `fly-to`, `set-stance`
 
 **World interaction**: `activate-block`, `interact-entity`, `attack-entity`, `use-held-item`, `fish`
 
@@ -74,11 +74,13 @@ Environment variables are the defaults; the matching flag overrides one.
 
 **Blocks**: `get-block-info`, `find-blocks`, `dig-block`, `place-block`, `read-block-entity`
 
-**Entities**: `find-entity`
+**Entities**: `read-displays`
 
 **Chat**: `send-chat`, `read-chat`
 
-**HUD**: `read-scoreboard`, `read-boss-bars`, `read-player-list`, `read-action-bar`, `wait-for-action-bar`, `read-title`, `wait-for-title`, `get-player-state`
+**HUD**: `read-scoreboard`, `read-boss-bars`, `read-player-list`, `read-action-bar`, `wait-for-action-bar`, `read-title`, `wait-for-title`, `read-dialog`, `wait-for-dialog`, `get-player-state`
+
+**Sounds and particles**: `read-effects`, `wait-for-effect`
 
 **Crafting**: `list-recipes`, `get-recipe`, `can-craft`, `craft-item`
 

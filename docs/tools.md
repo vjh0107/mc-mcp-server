@@ -174,6 +174,16 @@ Arguments:
   - `y` (number, required) — Y coordinate
   - `z` (number, required) — Z coordinate
 
+### `set-stance`
+
+Hold the bot crouching or sprinting. Both stay on until turned off, so a plugin that only reacts to a crouching player can be reached. Nothing else here changes the stance.
+
+Arguments:
+
+  - `bot` (string, optional) — Bot name given to join-server. Optional while exactly one bot is connected.
+  - `sneak` (boolean, optional) — Crouch, or stand up again
+  - `sprint` (boolean, optional) — Sprint, or stop sprinting
+
 ## World interaction
 
 ### `activate-block`
@@ -388,16 +398,15 @@ Arguments:
 
 ## Entities
 
-### `find-entity`
+### `read-displays`
 
-Find nearby entities, optionally filtered by type or name.
+Read the text floating in the world: holograms, name tags and NPC labels. They are display entities, so find-entity only reports that they exist.
 
 Arguments:
 
   - `bot` (string, optional) — Bot name given to join-server. Optional while exactly one bot is connected.
-  - `type` (string, optional) — "player", "mob", or part of an entity name. Omit to match anything.
-  - `maxDistance` (number, optional) — Search radius (default: 16)
-  - `count` (integer, optional) — How many to return (default: 1)
+  - `maxDistance` (number, optional) — Search radius (default: 24)
+  - `count` (integer, optional) — How many to return (default: 20)
 
 ## Chat
 
@@ -484,6 +493,25 @@ Arguments:
   - `pattern` (string, required) — JavaScript regular expression source
   - `timeoutMs` (integer, optional) — How long to wait (default: 10000)
 
+### `read-dialog`
+
+Read the dialogs the server has opened on screen, with their title, body and the buttons they offer. The bot cannot press those buttons: the packet that answers a dialog is named in the 26.1 protocol but carries no field definition, so it cannot be sent. Repeats are collapsed, so each line is a change. A HUD drawn in custom fonts arrives as several pieces separated by " | ", each tagged with the font that names it.
+
+Arguments:
+
+  - `bot` (string, optional) — Bot name given to join-server. Optional while exactly one bot is connected.
+  - `count` (integer, optional) — How many recent lines to return (default: 5)
+
+### `wait-for-dialog`
+
+Wait until a dialog whose text matches a regular expression is opened. Returns straight away if it already says so.
+
+Arguments:
+
+  - `bot` (string, optional) — Bot name given to join-server. Optional while exactly one bot is connected.
+  - `pattern` (string, required) — JavaScript regular expression source
+  - `timeoutMs` (integer, optional) — How long to wait (default: 10000)
+
 ### `get-player-state`
 
 Report the health, hunger, experience and position the bot sees for itself.
@@ -491,6 +519,27 @@ Report the health, hunger, experience and position the bot sees for itself.
 Arguments:
 
   - `bot` (string, optional) — Bot name given to join-server. Optional while exactly one bot is connected.
+
+## Sounds and particles
+
+### `read-effects`
+
+Read the sounds and particles the server has played near the bot. Repeats are collapsed, so each line is a change. A HUD drawn in custom fonts arrives as several pieces separated by " | ", each tagged with the font that names it.
+
+Arguments:
+
+  - `bot` (string, optional) — Bot name given to join-server. Optional while exactly one bot is connected.
+  - `count` (integer, optional) — How many recent lines to return (default: 5)
+
+### `wait-for-effect`
+
+Wait until a sound or particle whose name matches a regular expression is played. Returns straight away if it already says so.
+
+Arguments:
+
+  - `bot` (string, optional) — Bot name given to join-server. Optional while exactly one bot is connected.
+  - `pattern` (string, required) — JavaScript regular expression source
+  - `timeoutMs` (integer, optional) — How long to wait (default: 10000)
 
 ## Crafting
 

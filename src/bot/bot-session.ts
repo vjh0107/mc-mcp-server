@@ -6,6 +6,8 @@ import { botKicks } from '../metrics.ts';
 import { connectOverride } from '../minecraft/connect.ts';
 import { ScoreTracker } from '../minecraft/scoreboard.ts';
 import { describeSegments, toSegments } from '../minecraft/text.ts';
+import { describeDialog, soundName } from '../minecraft/screen.ts';
+import type { SoundPacket } from '../minecraft/screen.ts';
 import type { PacketSource } from '../minecraft/scoreboard.ts';
 import { MessageStore } from './message-store.ts';
 import { applyProtocolPatches } from './patches.ts';
@@ -46,6 +48,8 @@ export class BotSession {
   readonly scores = new ScoreTracker();
   readonly actionBar = new MessageStore();
   readonly titles = new MessageStore();
+  readonly dialogs = new MessageStore();
+  readonly effects = new MessageStore();
   readonly joinedAt = Date.now();
 
   lastUsedAt = Date.now();
@@ -111,6 +115,8 @@ export class BotSession {
     this.messages.abandonWaiters();
     this.actionBar.abandonWaiters();
     this.titles.abandonWaiters();
+    this.dialogs.abandonWaiters();
+    this.effects.abandonWaiters();
   }
 
   quit(reason: string): void {
@@ -235,6 +241,40 @@ export class BotSession {
 
     bot._client.on('set_title_text' as never, recordTitle('title') as never);
     bot._client.on('set_title_subtitle' as never, recordTitle('subtitle') as never);
+
+    /*
+    show_dialog is new in 26.1 and mineflayer does not know it. Reading it is all that is on
+    offer: custom_click_action, the packet that answers a dialog, is listed in the protocol
+    mappings but carries no field definition, so it cannot be serialised to press a button.
+    */
+    bot._client.on('show_dialog' as never, ((packet: { dialog?: unknown }) => {
+      const text = describeDialog(packet.dialog);
+      if (text !== '') {
+        this.dialogs.addDistinct('dialog', text);
+      }
+    }) as never);
+
+    const recordSound = (packet: SoundPacket) => {
+      const name = soundName(bot, packet.sound);
+      if (name !== '') {
+        this.effects.addDistinct('sound', name);
+      }
+    };
+
+    bot._client.on('sound_effect' as never, recordSound as never);
+    bot._client.on('entity_sound_effect' as never, recordSound as never);
+
+    bot._client.on('world_particles' as never, ((packet: { particle?: { type?: unknown } }) => {
+      const type = packet.particle?.type;
+      if (typeof type === 'string') {
+        this.effects.addDistinct('particle', type);
+      }
+    }) as never);
+
+    bot.on('death', () => {
+      this.messages.add('system', 'The bot died.');
+      log('warn', 'bot died', { bot: this.spec.name });
+    });
 
     bot.on('kicked', (reason) => {
       botKicks.inc();

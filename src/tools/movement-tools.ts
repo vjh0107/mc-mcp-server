@@ -128,4 +128,33 @@ export function registerMovementTools(server: McpServer, registry: BotRegistry):
       }
     },
   );
+
+  registerTool(
+    server,
+    'set-stance',
+    'Hold the bot crouching or sprinting. Both stay on until turned off, so a plugin that only ' +
+    'reacts to a crouching player can be reached. Nothing else here changes the stance.',
+    {
+      ...botArg,
+      sneak: z.boolean().optional().describe('Crouch, or stand up again'),
+      sprint: z.boolean().optional().describe('Sprint, or stop sprinting'),
+    },
+    (args) => {
+      const bot = resolveSession(registry, args.bot).requireBot();
+
+      if (args.sneak === undefined && args.sprint === undefined) {
+        return `sneaking: ${bot.getControlState('sneak')}, sprinting: ${bot.getControlState('sprint')}`;
+      }
+
+      if (args.sneak !== undefined) {
+        bot.setControlState('sneak', args.sneak);
+      }
+
+      if (args.sprint !== undefined) {
+        bot.setControlState('sprint', args.sprint);
+      }
+
+      return `sneaking: ${bot.getControlState('sneak')}, sprinting: ${bot.getControlState('sprint')}`;
+    },
+  );
 }

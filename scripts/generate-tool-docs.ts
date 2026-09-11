@@ -17,6 +17,7 @@ const GROUPS: { file: string; title: string }[] = [
   { file: 'entity-tools', title: 'Entities' },
   { file: 'chat-tools', title: 'Chat' },
   { file: 'hud-tools', title: 'HUD' },
+  { file: 'effect-tools', title: 'Sounds and particles' },
   { file: 'crafting-tools', title: 'Crafting' },
   { file: 'furnace-tools', title: 'Smelting' },
 ];
