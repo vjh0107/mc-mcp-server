@@ -406,7 +406,7 @@ Arguments:
 
 ### `read-action-bar`
 
-Read the action bar text above the hotbar, which servers use for live status. Repeats are collapsed, so each line is a change.
+Read the action bar text above the hotbar, which servers use for live status. Repeats are collapsed, so each line is a change. A HUD drawn in custom fonts arrives as several pieces separated by " | ", each tagged with the font that names it.
 
 Arguments:
 

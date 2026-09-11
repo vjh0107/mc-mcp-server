@@ -3,7 +3,7 @@ import type { McpServer } from '@modelcontextprotocol/server';
 import type { BossBar, Bot, ScoreBoard } from 'mineflayer';
 import type { BotRegistry } from '../bot/registry.ts';
 import { botArg, registerTool, resolveSession } from '../mcp/tool-helpers.ts';
-import { toPlainText } from '../minecraft/text.ts';
+import { describeSegments, toPlainText, toSegments } from '../minecraft/text.ts';
 
 const DISPLAY_SLOTS = ['sidebar', 'list', 'belowName'] as const;
 
@@ -72,7 +72,7 @@ export function viewScoreboard(board: ScoreboardLike): ScoreboardView {
 
 export function viewBossBar(bar: BossBarLike): BossBarView {
   return {
-    title: toPlainText(bar.title),
+    title: describeSegments(toSegments(bar.title)),
     progress: bar.health ?? 0,
     color: bar.color ?? 'unknown',
     dividers: bar.dividers ?? 0,
@@ -186,7 +186,8 @@ export function registerHudTools(server: McpServer, registry: BotRegistry): void
     server,
     'read-action-bar',
     'Read the action bar text above the hotbar, which servers use for live status. ' +
-    'Repeats are collapsed, so each line is a change.',
+    'Repeats are collapsed, so each line is a change. A HUD drawn in custom fonts arrives as ' +
+    'several pieces separated by " | ", each tagged with the font that names it.',
     {
       ...botArg,
       count: z.coerce.number().int().min(1).optional()

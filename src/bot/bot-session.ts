@@ -5,7 +5,7 @@ import { describeError, log } from '../logger.ts';
 import { botKicks } from '../metrics.ts';
 import { connectOverride } from '../minecraft/connect.ts';
 import { ScoreTracker } from '../minecraft/scoreboard.ts';
-import { toPlainText } from '../minecraft/text.ts';
+import { describeSegments, toSegments } from '../minecraft/text.ts';
 import type { PacketSource } from '../minecraft/scoreboard.ts';
 import { MessageStore } from './message-store.ts';
 import { applyProtocolPatches } from './patches.ts';
@@ -208,7 +208,7 @@ export class BotSession {
     });
 
     const recordActionBar = (value: unknown) => {
-      const text = toPlainText(value);
+      const text = describeSegments(toSegments(value));
       if (text !== '') {
         this.actionBar.addDistinct('actionbar', text);
       }
