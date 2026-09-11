@@ -63,25 +63,28 @@ Reading the Secret back is what keeps the generated token stable across upgrades
 new value would be rendered every time, the pod would restart, and every client that already
 holds a token would start getting 401s.
 
+The result is memoised on .Values because randAlphaNum answers differently on every call, and
+the Secret and the Deployment's checksum annotation both have to see the same token. Whichever
+template asks first decides the value for the whole render.
+
 The lookup only works when Helm talks to a live cluster. Renderers that template first and apply
 later -- `helm template`, ArgoCD, and anything built on them -- get an empty result and therefore
 a brand new token on every render. Set auth.existingSecret there.
-
-Call this from exactly one template. Each call that falls through to randAlphaNum produces a
-different value.
 */}}
 {{- define "mc-mcp-server.authToken" -}}
-{{- if .Values.auth.token -}}
-{{- .Values.auth.token -}}
-{{- else -}}
-{{- $name := include "mc-mcp-server.authSecretName" . -}}
-{{- $existing := (lookup "v1" "Secret" .Release.Namespace $name).data -}}
+{{- if not (hasKey .Values "resolvedAuthToken") -}}
+{{- $token := .Values.auth.token -}}
+{{- if not $token -}}
+{{- $existing := (lookup "v1" "Secret" .Release.Namespace (include "mc-mcp-server.authSecretName" .)).data -}}
 {{- if and $existing (hasKey $existing .Values.auth.secretKey) -}}
-{{- index $existing .Values.auth.secretKey | b64dec -}}
+{{- $token = index $existing .Values.auth.secretKey | b64dec -}}
 {{- else -}}
-{{- randAlphaNum 32 -}}
+{{- $token = randAlphaNum 32 -}}
 {{- end -}}
 {{- end -}}
+{{- $_ := set .Values "resolvedAuthToken" $token -}}
+{{- end -}}
+{{- .Values.resolvedAuthToken -}}
 {{- end -}}
 
 {{- define "mc-mcp-server.needsApiAccess" -}}

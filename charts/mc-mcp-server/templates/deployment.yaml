@@ -21,7 +21,7 @@ spec:
         {{- end }}
       annotations:
         {{- if and .Values.auth.enabled (not .Values.auth.existingSecret) }}
-        checksum/auth: {{ .Values.auth.token | sha256sum }}
+        checksum/auth: {{ include "mc-mcp-server.authToken" . | sha256sum }}
         {{- end }}
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
