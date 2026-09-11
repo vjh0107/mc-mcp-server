@@ -31,11 +31,18 @@ jobs:
       # The published tag is built from package.json, so a chart that disagrees would claim a
       # version it was never released as. On a pull request the base branch is the comparison;
       # on a push it is the commit that was replaced.
+      #
+      # A force push leaves nothing to compare against: the commit it names is gone from the
+      # repository. Only the consistency half runs there.
       - name: version is consistent and was raised
+        env:
+          FORCED: ${{ github.event.forced }}
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
         run: |
-          base="${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}"
-          case "$base" in ''|0000000000000000000000000000000000000000) node scripts/check-version.ts ;;
-                          *) node scripts/check-version.ts "$base" ;; esac
+          case "$FORCED$BASE" in
+            true*|''|0000000000000000000000000000000000000000) node scripts/check-version.ts ;;
+            *) node scripts/check-version.ts "$BASE" ;;
+          esac
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test
