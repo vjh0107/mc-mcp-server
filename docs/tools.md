@@ -503,7 +503,7 @@ Arguments:
 
 ### `read-dialog`
 
-Read the dialogs the server has opened on screen, with their title, body and the buttons they offer. The bot cannot press those buttons: the packet that answers a dialog is named in the 26.1 protocol but carries no field definition, so it cannot be sent. Repeats are collapsed, so each line is a change. A HUD drawn in custom fonts arrives as several pieces separated by " | ", each tagged with the font that names it.
+Read the dialogs the server has opened on screen, with their title, body and the buttons they offer, and the point at which each was closed again. The bot cannot press those buttons: the packet that answers a dialog is serialised from a definition that does not match 26.1, and a server drops the connection rather than read it. Repeats are collapsed, so each line is a change. A HUD drawn in custom fonts arrives as several pieces separated by " | ", each tagged with the font that names it.
 
 Arguments:
 

@@ -9,6 +9,15 @@ Versions follow [semantic versioning](https://semver.org). While the major versi
 `package.json` holds the version. The chart carries the same one, the published tag is built from
 it, and CI refuses a change to anything that ships unless the version went up.
 
+## 0.4.0
+
+### Changed
+
+- `read-dialog` says when a dialog was closed again. Until now the last one read as though it were
+  still up long after the server took it away, which is the wrong answer to the only question this
+  feed exists to answer. Lines now carry which side they came from, so a reading that used to say
+  `Notice | still up` says `dialog: Notice | still up` and is followed by `closed: ...`.
+
 ## 0.3.1
 
 ### Fixed
@@ -43,8 +52,8 @@ it, and CI refuses a change to anything that ships unless the version went up.
 - `read-displays`. Name tags, holograms and NPC labels are display entities, and `find-entity`
   could only report that one was there.
 - `read-dialog` and `wait-for-dialog`. `show_dialog` is new in 26.1 and mineflayer does not know
-  it. Reading is all that is on offer, because the packet that answers a dialog carries no field
-  definition in the protocol data and cannot be sent.
+  it. Reading is all that is on offer: the packet that answers a dialog is serialised from a
+  definition that does not match 26.1, and a server drops the connection rather than read it.
 - `read-effects` and `wait-for-effect`. Sounds and particles, for feedback that never becomes
   words on screen.
 - `fish`. Equips a rod, casts, and reels in on the bite, with a bounded wait.

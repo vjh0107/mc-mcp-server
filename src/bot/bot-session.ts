@@ -256,6 +256,14 @@ export class BotSession {
       }
     }) as never);
 
+    /*
+    Without this the last dialog read as though it were still up long after the server took it
+    away, which is the wrong answer to the only question worth asking of this feed.
+    */
+    bot._client.on('clear_dialog' as never, (() => {
+      this.dialogs.add('closed', 'the dialog was closed');
+    }) as never);
+
     const recordSound = (packet: SoundPacket) => {
       const name = soundName(bot, packet.sound);
       if (name !== '') {
