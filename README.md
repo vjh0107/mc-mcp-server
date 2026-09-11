@@ -26,17 +26,6 @@ claude mcp add --transport http mc-mcp-server http://mc-mcp-server.mcp.svc/mcp \
 
 Keeping the token depends on Helm reading the Secret back from a live cluster. ArgoCD and anything else that renders first and applies later gets an empty read and a new token every sync, so pass `auth.existingSecret` there.
 
-## Versions
-
-`package.json` holds the version and the chart carries the same one. The published tag is that
-version with a UTC stamp and the commit, so `0.2.0-20260911084000.gabcdef12` is release 0.2.0.
-
-While the major version is 0, a tool that is added or removed, one that takes different arguments
-or answers in a different shape, and a chart default that changes how a deployment behaves are all
-minor. Everything else is a patch. CI refuses a change under `src/` or `charts/` unless the version
-went up, so no two releases can differ only by their timestamp. [CHANGELOG.md](CHANGELOG.md) says
-what each one carried.
-
 ## Configuration
 
 Environment variables are the defaults; the matching flag overrides one.

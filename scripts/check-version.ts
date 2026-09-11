@@ -44,21 +44,28 @@ function chartVersions(source: string): { version: string; appVersion: string } 
   return { version, appVersion };
 }
 
-function previous(path: string, ref: string): string | null {
+function previous(path: string, ref: string): string {
   try {
     return execFileSync('git', ['show', `${ref}:${path}`], { encoding: 'utf8' });
-  } catch {
-    return null;
+  } catch (error) {
+    fail(`cannot read ${path} at ${ref}: ${(error as Error).message}`);
   }
 }
 
+/*
+A shallow clone has no earlier commit to diff against, and answering "nothing changed" there
+would leave this check passing on every release while enforcing nothing at all.
+*/
 function changedFiles(ref: string): string[] {
   try {
     return execFileSync('git', ['diff', '--name-only', ref, 'HEAD'], { encoding: 'utf8' })
       .split('\n')
       .filter((line) => line !== '');
-  } catch {
-    return [];
+  } catch (error) {
+    fail(
+      `cannot diff against ${ref}: ${(error as Error).message}\n` +
+      'Check out with fetch-depth: 0 so the comparison has history to work with.',
+    );
   }
 }
 
@@ -97,14 +104,7 @@ if (shipped.length === 0) {
   process.exit(0);
 }
 
-const before = previous(PACKAGE, base);
-
-if (before === null) {
-  process.stdout.write(`version ${declared} is consistent; no earlier ${PACKAGE} to compare\n`);
-  process.exit(0);
-}
-
-const earlier = (JSON.parse(before) as { version: string }).version;
+const earlier = (JSON.parse(previous(PACKAGE, base)) as { version: string }).version;
 
 if (compare(declared, earlier) <= 0) {
   fail(
