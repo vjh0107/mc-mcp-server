@@ -45,6 +45,7 @@ export class BotSession {
   readonly messages = new MessageStore();
   readonly scores = new ScoreTracker();
   readonly actionBar = new MessageStore();
+  readonly titles = new MessageStore();
   readonly joinedAt = Date.now();
 
   lastUsedAt = Date.now();
@@ -109,6 +110,7 @@ export class BotSession {
   private abandonAllWaiters(): void {
     this.messages.abandonWaiters();
     this.actionBar.abandonWaiters();
+    this.titles.abandonWaiters();
   }
 
   quit(reason: string): void {
@@ -218,6 +220,21 @@ export class BotSession {
     bot._client.on('action_bar' as never, ((packet: { text?: unknown }) => {
       recordActionBar(packet.text);
     }) as never);
+
+    /*
+    mineflayer emits its own 'title' event, but parseTitle there reaches for parsed.text and
+    drops extra, so a title built from several pieces arrives as the first one or as raw JSON.
+    Reading the packet keeps every piece, the same reason the action bar is read this way.
+    */
+    const recordTitle = (kind: string) => (packet: { text?: unknown }) => {
+      const text = describeSegments(toSegments(packet.text));
+      if (text !== '') {
+        this.titles.addDistinct(kind, text);
+      }
+    };
+
+    bot._client.on('set_title_text' as never, recordTitle('title') as never);
+    bot._client.on('set_title_subtitle' as never, recordTitle('subtitle') as never);
 
     bot.on('kicked', (reason) => {
       botKicks.inc();

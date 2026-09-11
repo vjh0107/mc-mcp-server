@@ -242,4 +242,53 @@ export function registerInteractTools(server: McpServer, registry: BotRegistry):
       return `Used ${held} in the ${hand}.`;
     },
   );
+
+  registerTool(
+    server,
+    'fish',
+    'Cast the rod and wait for a bite, then reel in. Equips a fishing rod from the inventory if ' +
+    'one is not already in hand. The bot has to be standing within reach of water.',
+    {
+      ...botArg,
+      timeoutMs: z.coerce.number().int().min(1_000).max(300_000).optional()
+        .describe('How long to wait for a bite (default: 60000)'),
+    },
+    async (args) => {
+      const bot = resolveSession(registry, args.bot).requireBot();
+      const timeoutMs = args.timeoutMs ?? 60_000;
+
+      if (bot.heldItem?.name.includes('fishing_rod') !== true) {
+        const rod = bot.inventory.items().find((item) => item.name.includes('fishing_rod'));
+
+        if (!rod) {
+          throw new Error('No fishing rod is in the inventory.');
+        }
+
+        await bot.equip(rod, 'hand');
+      }
+
+      const before = bot.inventory.items().reduce((sum, item) => sum + item.count, 0);
+
+      /*
+      bot.fish() settles when the bobber's particles say something bit. Nothing else ends it, so
+      an unreachable water source or a server that fishes its own way would hang here forever.
+      */
+      try {
+        await Promise.race([
+          bot.fish(),
+          delay(timeoutMs).then(() => {
+            throw new Error(`No bite within ${timeoutMs}ms.`);
+          }),
+        ]);
+      } catch (error) {
+        bot.activateItem();
+        bot.deactivateItem();
+        throw error;
+      }
+
+      const after = bot.inventory.items().reduce((sum, item) => sum + item.count, 0);
+
+      return `Reeled in. The inventory went from ${before} to ${after} items.`;
+    },
+  );
 }
