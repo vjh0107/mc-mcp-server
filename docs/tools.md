@@ -111,6 +111,14 @@ Arguments:
   - `timeoutMs` (integer, optional) — How long to wait for the answer (default: 5000)
   - `limit` (integer, optional) — How many completions to show (default: 60)
 
+### `get-world-state`
+
+Report the in-game time and weather. A server that runs its own calendar shows that on the HUD instead, so this is the vanilla clock the world actually ticks on.
+
+Arguments:
+
+  - `bot` (string, optional) — Bot name given to join-server. Optional while exactly one bot is connected.
+
 ## Movement
 
 ### `get-position`

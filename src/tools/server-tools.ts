@@ -223,4 +223,27 @@ export function registerServerTools(server: McpServer, registry: BotRegistry): v
         lines.join('\n')}${more}`;
     },
   );
+
+  registerTool(
+    server,
+    'get-world-state',
+    'Report the in-game time and weather. A server that runs its own calendar shows that on the ' +
+    'HUD instead, so this is the vanilla clock the world actually ticks on.',
+    botArg,
+    (args) => {
+      const bot = resolveSession(registry, args.bot).requireBot();
+      const time = bot.time;
+      const hour = Math.floor(((time.timeOfDay + 6_000) % 24_000) / 1_000);
+      const minute = Math.floor((((time.timeOfDay + 6_000) % 24_000) % 1_000) * 60 / 1_000);
+      const weather = bot.thunderState > 0 ? 'thunder' : bot.isRaining ? 'rain' : 'clear';
+
+      return [
+        `time: ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')} ` +
+        `(tick ${time.timeOfDay} of the day, ${time.isDay ? 'day' : 'night'})`,
+        `day: ${time.day}, moon phase ${time.moonPhase}`,
+        `weather: ${weather}`,
+        `daylight cycle: ${time.doDaylightCycle ? 'running' : 'frozen'}`,
+      ].join('\n');
+    },
+  );
 }

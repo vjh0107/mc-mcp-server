@@ -22,6 +22,13 @@ function formatStatus(status: BotStatus): string {
     `lastUsedAt: ${status.lastUsedAt}`,
   ];
 
+  /*
+  Behind a proxy the brand is the only thing that names the backend the bot actually landed on.
+  Velocity sends its own, and a proxy that rewrites it says more still.
+  */
+  if (status.serverBrand) {
+    lines.push(`serverBrand: ${status.serverBrand}`);
+  }
   if (status.owner) {
     lines.push(`owner: ${status.owner}`);
   }

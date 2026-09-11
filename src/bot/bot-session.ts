@@ -37,6 +37,7 @@ export interface BotStatus {
   food: number | null;
   gameMode: string | null;
   dimension: string | null;
+  serverBrand: string | null;
   joinedAt: string;
   lastUsedAt: string;
   lastError: string | null;
@@ -105,6 +106,7 @@ export class BotSession {
       food: bot?.food ?? null,
       gameMode: bot?.game?.gameMode ?? null,
       dimension: bot?.game?.dimension ?? null,
+      serverBrand: bot?.game?.serverBrand ?? null,
       joinedAt: new Date(this.joinedAt).toISOString(),
       lastUsedAt: new Date(this.lastUsedAt).toISOString(),
       lastError: this.lastError,

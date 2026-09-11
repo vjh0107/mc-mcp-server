@@ -9,6 +9,21 @@ Versions follow [semantic versioning](https://semver.org). While the major versi
 `package.json` holds the version. The chart carries the same one, the published tag is built from
 it, and CI refuses a change to anything that ships unless the version went up.
 
+## 0.3.0
+
+### Added
+
+- `get-world-state`. The vanilla clock and weather, for a feature that only happens at a certain
+  time of day. A server running its own calendar draws that on the HUD instead.
+- `get-bot-status` reports `serverBrand`. Behind a proxy that is the only thing naming the backend
+  the bot actually landed on, and a proxy that rewrites its brand says more still. Finding out
+  otherwise meant asking each candidate server whether it had the bot.
+
+### Fixed
+
+- The development instructions started the server with flags that no longer exist, so following
+  them printed usage instead of running anything.
+
 ## 0.2.0
 
 ### Added

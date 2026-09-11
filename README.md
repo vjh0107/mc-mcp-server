@@ -56,13 +56,13 @@ Environment variables are the defaults; the matching flag overrides one.
 
 <!-- BEGIN GENERATED TOOLS -->
 
-58 tools in total.
+59 tools in total.
 
 **Sessions**: `join-server`, `leave-server`, `list-bots`, `get-bot-status`
 
 **Server checks**: `ping-server`
 
-**Server interaction**: `run-command`, `switch-server`, `wait-for-chat`, `wait-ticks`, `detect-gamemode`, `complete-command`
+**Server interaction**: `run-command`, `switch-server`, `wait-for-chat`, `wait-ticks`, `detect-gamemode`, `complete-command`, `get-world-state`
 
 **Movement**: `get-position`, `move-to-position`, `look-at`, `jump`, `move-in-direction`, `fly-to`, `set-stance`
 
