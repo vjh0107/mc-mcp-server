@@ -109,6 +109,7 @@ Arguments:
   - `bot` (string, optional) — Bot name given to join-server. Optional while exactly one bot is connected.
   - `text` (string, required) — The partial command, for example "/is "
   - `timeoutMs` (integer, optional) — How long to wait for the answer (default: 5000)
+  - `limit` (integer, optional) — How many completions to show (default: 60)
 
 ## Movement
 
