@@ -41,6 +41,9 @@ importers:
       prismarine-item:
         specifier: ^1.18.0
         version: 1.18.0(supports-color@7.2.0)
+      prismarine-nbt:
+        specifier: ^2.8.0
+        version: 2.8.0
       prismarine-recipe:
         specifier: ^1.5.0
         version: 1.5.0(prismarine-registry@1.12.0(supports-color@7.2.0))

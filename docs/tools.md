@@ -100,6 +100,16 @@ Arguments:
 
   - `bot` (string, optional) — Bot name given to join-server. Optional while exactly one bot is connected.
 
+### `complete-command`
+
+Ask the server what completes a partial command, which is how to find out what a plugin offers without being told. "/" lists every command the bot may run.
+
+Arguments:
+
+  - `bot` (string, optional) — Bot name given to join-server. Optional while exactly one bot is connected.
+  - `text` (string, required) — The partial command, for example "/is "
+  - `timeoutMs` (integer, optional) — How long to wait for the answer (default: 5000)
+
 ## Movement
 
 ### `get-position`
@@ -207,6 +217,15 @@ Arguments:
   - `offhand` (boolean, optional) — Use the off-hand item instead of the main hand (default: false)
   - `holdMs` (integer, optional) — How long to keep the button down before releasing, for bows and the like (default: 0)
 
+### `fish`
+
+Cast the rod and wait for a bite, then reel in. Equips a fishing rod from the inventory if one is not already in hand. The bot has to be standing within reach of water.
+
+Arguments:
+
+  - `bot` (string, optional) — Bot name given to join-server. Optional while exactly one bot is connected.
+  - `timeoutMs` (integer, optional) — How long to wait for a bite (default: 60000)
+
 ## GUI windows
 
 ### `wait-for-window`
@@ -297,6 +316,17 @@ Arguments:
   - `itemName` (string, required) — Item name or a fragment of it
   - `destination` (`hand` | `head` | `torso` | `legs` | `feet` | `off-hand`, optional) — Where to equip it (default: 'hand')
 
+### `give-item`
+
+Put an item straight into the inventory. Creative mode only, which is what makes it useful: a test can start from the state it needs instead of gathering its way there.
+
+Arguments:
+
+  - `bot` (string, optional) — Bot name given to join-server. Optional while exactly one bot is connected.
+  - `itemName` (string, required) — Exact item name, for example diamond_pickaxe
+  - `count` (integer, optional) — How many (default: 1)
+  - `slot` (integer, optional) — Inventory slot to fill (default: the first empty one)
+
 ## Blocks
 
 ### `get-block-info`
@@ -343,6 +373,17 @@ Arguments:
   - `y` (number, required) — Y coordinate
   - `z` (number, required) — Z coordinate
   - `faceDirection` (`down` | `up` | `north` | `south` | `east` | `west`, optional) — Which neighbouring face to try first (default: 'down')
+
+### `read-block-entity`
+
+Read the data a block carries beyond its type: sign text, a container's custom name, a banner's pattern. Signs are the common case, since that is where servers write instructions into the world itself.
+
+Arguments:
+
+  - `bot` (string, optional) — Bot name given to join-server. Optional while exactly one bot is connected.
+  - `x` (number, required) — X coordinate
+  - `y` (number, required) — Y coordinate
+  - `z` (number, required) — Z coordinate
 
 ## Entities
 
@@ -416,6 +457,25 @@ Arguments:
 ### `wait-for-action-bar`
 
 Wait until the action bar shows text matching a regular expression. Returns straight away if it already says so.
+
+Arguments:
+
+  - `bot` (string, optional) — Bot name given to join-server. Optional while exactly one bot is connected.
+  - `pattern` (string, required) — JavaScript regular expression source
+  - `timeoutMs` (integer, optional) — How long to wait (default: 10000)
+
+### `read-title`
+
+Read the titles and subtitles the server has thrown across the screen, which is where servers put things the player must not miss. Repeats are collapsed, so each line is a change. A HUD drawn in custom fonts arrives as several pieces separated by " | ", each tagged with the font that names it.
+
+Arguments:
+
+  - `bot` (string, optional) — Bot name given to join-server. Optional while exactly one bot is connected.
+  - `count` (integer, optional) — How many recent lines to return (default: 5)
+
+### `wait-for-title`
+
+Wait until a title or subtitle matching a regular expression is shown. Returns straight away if it already says so.
 
 Arguments:
 

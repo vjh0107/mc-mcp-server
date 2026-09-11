@@ -54,31 +54,31 @@ Environment variables are the defaults; the matching flag overrides one.
 
 <!-- BEGIN GENERATED TOOLS -->
 
-47 tools in total.
+53 tools in total.
 
 **Sessions**: `join-server`, `leave-server`, `list-bots`, `get-bot-status`
 
 **Server checks**: `ping-server`
 
-**Server interaction**: `run-command`, `switch-server`, `wait-for-chat`, `wait-ticks`, `detect-gamemode`
+**Server interaction**: `run-command`, `switch-server`, `wait-for-chat`, `wait-ticks`, `detect-gamemode`, `complete-command`
 
 **Movement**: `get-position`, `move-to-position`, `look-at`, `jump`, `move-in-direction`, `fly-to`
 
-**World interaction**: `activate-block`, `interact-entity`, `attack-entity`, `use-held-item`
+**World interaction**: `activate-block`, `interact-entity`, `attack-entity`, `use-held-item`, `fish`
 
 **GUI windows**: `wait-for-window`, `read-window`, `close-window`
 
 **Slots and containers**: `click-slot`, `open-container`, `drop-held-item`
 
-**Inventory**: `list-inventory`, `find-item`, `equip-item`
+**Inventory**: `list-inventory`, `find-item`, `equip-item`, `give-item`
 
-**Blocks**: `get-block-info`, `find-blocks`, `dig-block`, `place-block`
+**Blocks**: `get-block-info`, `find-blocks`, `dig-block`, `place-block`, `read-block-entity`
 
 **Entities**: `find-entity`
 
 **Chat**: `send-chat`, `read-chat`
 
-**HUD**: `read-scoreboard`, `read-boss-bars`, `read-player-list`, `read-action-bar`, `wait-for-action-bar`, `get-player-state`
+**HUD**: `read-scoreboard`, `read-boss-bars`, `read-player-list`, `read-action-bar`, `wait-for-action-bar`, `read-title`, `wait-for-title`, `get-player-state`
 
 **Crafting**: `list-recipes`, `get-recipe`, `can-craft`, `craft-item`
 
