@@ -9,6 +9,14 @@ Versions follow [semantic versioning](https://semver.org). While the major versi
 `package.json` holds the version. The chart carries the same one, the published tag is built from
 it, and CI refuses a change to anything that ships unless the version went up.
 
+## 0.4.1
+
+### Fixed
+
+- `find-entity` was missing from the generated tool docs. The generator called only the first
+  `register*` export per file, and `entity-tools.ts` has two, so one whole group never reached
+  the documentation. A caller reading the docs had no way to know the tool existed.
+
 ## 0.4.0
 
 ### Changed

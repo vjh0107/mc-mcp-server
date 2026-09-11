@@ -56,7 +56,7 @@ Environment variables are the defaults; the matching flag overrides one.
 
 <!-- BEGIN GENERATED TOOLS -->
 
-59 tools in total.
+60 tools in total.
 
 **Sessions**: `join-server`, `leave-server`, `list-bots`, `get-bot-status`
 
@@ -76,7 +76,7 @@ Environment variables are the defaults; the matching flag overrides one.
 
 **Blocks**: `get-block-info`, `find-blocks`, `dig-block`, `place-block`, `read-block-entity`
 
-**Entities**: `read-displays`
+**Entities**: `read-displays`, `find-entity`
 
 **Chat**: `send-chat`, `read-chat`
 

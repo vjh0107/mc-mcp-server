@@ -2,8 +2,8 @@ apiVersion: v2
 name: mc-mcp-server
 description: MCP server that drives Mineflayer bots, for AI agents exercising a Minecraft server from inside the cluster.
 type: application
-version: 0.4.0
-appVersion: "0.4.0"
+version: 0.4.1
+appVersion: "0.4.1"
 keywords:
   - minecraft
   - mcp

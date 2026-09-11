@@ -416,6 +416,17 @@ Arguments:
   - `maxDistance` (number, optional) — Search radius (default: 24)
   - `count` (integer, optional) — How many to return (default: 20)
 
+### `find-entity`
+
+Find nearby entities, optionally filtered by type or name.
+
+Arguments:
+
+  - `bot` (string, optional) — Bot name given to join-server. Optional while exactly one bot is connected.
+  - `type` (string, optional) — "player", "mob", or part of an entity name. Omit to match anything.
+  - `maxDistance` (number, optional) — Search radius (default: 16)
+  - `count` (integer, optional) — How many to return (default: 1)
+
 ## Chat
 
 ### `send-chat`

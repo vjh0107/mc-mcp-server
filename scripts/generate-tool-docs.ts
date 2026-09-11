@@ -42,11 +42,16 @@ async function collectTools(): Promise<Map<string, ToolInfo[]>> {
 
   for (const group of GROUPS) {
     const module = await import(`../src/tools/${group.file}.ts`) as Record<string, unknown>;
-    const register = Object.entries(module)
-      .find(([name]) => name.startsWith('register'))?.[1] as
-      ((server: unknown, registry: BotRegistry) => void) | undefined;
 
-    if (!register) {
+    /*
+    A file may register more than one group of tools. Taking only the first export left
+    find-entity out of the docs entirely, so a caller reading them did not know it existed.
+    */
+    const registrars = Object.entries(module)
+      .filter(([name]) => name.startsWith('register'))
+      .map(([, value]) => value as (server: unknown, registry: BotRegistry) => void);
+
+    if (registrars.length === 0) {
       throw new Error(`${group.file} exports no register function`);
     }
 
@@ -63,7 +68,9 @@ async function collectTools(): Promise<Map<string, ToolInfo[]>> {
       },
     };
 
-    register(server, registry);
+    for (const register of registrars) {
+      register(server, registry);
+    }
     byGroup.set(group.title, tools);
   }
 
