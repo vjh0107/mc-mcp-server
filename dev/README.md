@@ -9,7 +9,7 @@ docker compose -f dev/compose.yml up -d
 It publishes **25577**, not 25565, because 25565 is often already taken. Override with `MC_PORT`.
 
 ```bash
-MCP_AUTH_TOKEN=devtoken node dist/main.js --port 3399 --bind-host 127.0.0.1
+MCP_AUTH_TOKEN=devtoken pnpm dev -- --port 3399 --bind-host 127.0.0.1
 ```
 
 Joining as `probe` gives the username `mcp_probe`, which compose ops at startup. Use `BOT_USERNAME` to match a different name.

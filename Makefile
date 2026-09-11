@@ -3,6 +3,7 @@ IMAGE ?= junhyung.cloud/library/mc-mcp-server
 .PHONY: check
 check:
 	pnpm install --frozen-lockfile
+	pnpm check:version
 	pnpm typecheck
 	pnpm lint
 	pnpm test
