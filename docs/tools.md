@@ -113,7 +113,7 @@ Arguments:
 
 ### `get-world-state`
 
-Report the in-game time and weather. A server that runs its own calendar shows that on the HUD instead, so this is the vanilla clock the world actually ticks on.
+Report the in-game time and weather, for a feature that only happens at a certain time of day. This is the clock the world ticks on, not whatever a server may draw on its HUD.
 
 Arguments:
 

@@ -9,6 +9,17 @@ Versions follow [semantic versioning](https://semver.org). While the major versi
 `package.json` holds the version. The chart carries the same one, the published tag is built from
 it, and CI refuses a change to anything that ships unless the version went up.
 
+## 0.3.1
+
+### Fixed
+
+- `read-dialog` never saw a dialog. `show_dialog` wraps the definition in a registry entry holder,
+  so the NBT sits under `data`; passing the holder to the parser yielded nothing and the read of
+  the title threw, which the bot reported as an error and swallowed. An NBT list of one also
+  arrives as a bare compound, so a dialog with a single line of body or a lone button was read as
+  having neither. Confirmed against Paper 26.1.2 in `dev/compose.yml`: a two-line, two-button
+  dialog now reads `Notice | Cast from the bank only / Bait required | buttons: Got it, Later`.
+
 ## 0.3.0
 
 ### Added

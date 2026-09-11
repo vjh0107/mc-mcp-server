@@ -144,8 +144,8 @@ function collect(value: unknown, inherited: TextSegment, into: TextSegment[]): v
 
 /*
 Servers draw HUDs by stacking pieces in custom fonts: a bar glyph, a negative-space glyph that
-moves the cursor, then a label. Flattening that to one string runs the labels together -- two
-"20/20" and two "0" arrive as "20/2020/2000" -- so the pieces are kept apart here.
+moves the cursor, then a label. Flattening that to one string runs the labels together, so a
+health bar and a food bar both reading "20/20" arrive as "20/2020/20". The pieces are kept apart.
 
 Glyph characters live in the Unicode private use area and mean nothing as text, so a piece that
 holds only those is dropped.

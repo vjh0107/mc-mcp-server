@@ -83,3 +83,32 @@ test('nothing to describe produces nothing, so the store is not fed empty lines'
   assert.equal(describeDialog(null), '');
   assert.equal(describeDialog(compound({})), '');
 });
+
+function holder(value: unknown): unknown {
+  return { data: value };
+}
+
+test('the blob sits under data, the way show_dialog wraps it', () => {
+  const dialog = holder(compound({ title: nbt('Notice'), body: list([{ contents: nbt('one line') }]) }));
+
+  assert.equal(describeDialog(dialog), 'Notice | one line');
+});
+
+test('a single body line arrives as a bare compound, not a list of one', () => {
+  const single = holder(compound({
+    type: nbt('minecraft:notice'),
+    title: nbt('Notice'),
+    body: compound({ type: nbt('minecraft:plain_message'), contents: nbt('Cast from the bank only') }),
+  }));
+
+  assert.equal(describeDialog(single), 'Notice | Cast from the bank only');
+});
+
+test('a lone button is read the same way', () => {
+  const dialog = holder(compound({
+    title: nbt('Confirm'),
+    actions: compound({ label: nbt('Got it') }),
+  }));
+
+  assert.equal(describeDialog(dialog), 'Confirm | buttons: Got it');
+});
