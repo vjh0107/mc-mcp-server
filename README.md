@@ -11,18 +11,20 @@ It runs as a long-lived container and speaks Streamable HTTP, so one deployment 
 ```bash
 helm upgrade -i mc-mcp-server oci://junhyung.cloud/library/charts/mc-mcp-server \
   --version <tag> \
-  --namespace mcp --create-namespace \
-  --set auth.existingSecret=mc-mcp-server-auth
+  --namespace mcp --create-namespace
 ```
 
 The chart version and the image tag are the same value, so leaving `image.tag` unset runs the matching image. Every value is documented in the [chart README](charts/mc-mcp-server/README.md).
 
-Point a client at it:
+The chart makes an auth token on first install and keeps it across upgrades. Read it back and point a client at the endpoint:
 
 ```bash
+TOKEN=$(kubectl -n mcp get secret mc-mcp-server-auth -o jsonpath='{.data.token}' | base64 -d)
 claude mcp add --transport http mc-mcp-server http://mc-mcp-server.mcp.svc/mcp \
   -H "Authorization: Bearer $TOKEN"
 ```
+
+Keeping the token depends on Helm reading the Secret back from a live cluster. ArgoCD and anything else that renders first and applies later gets an empty read and a new token every sync, so pass `auth.existingSecret` there.
 
 ## Configuration
 

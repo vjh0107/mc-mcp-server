@@ -7,18 +7,24 @@ Runs the Mineflayer MCP server in Kubernetes.
 ```bash
 helm upgrade -i mc-mcp-server oci://junhyung.cloud/library/charts/mc-mcp-server \
   --version <tag> \
-  --namespace mcp --create-namespace \
-  --set auth.existingSecret=mc-mcp-server-auth
+  --namespace mcp --create-namespace
 ```
 
 The chart version and the image tag are the same value, so leaving `image.tag` unset runs the image that belongs to that chart version.
+
+## Authentication
+
+With no auth value set, the chart generates a 32 character token on first install and stores it in a Secret named `<release>-auth`. Later upgrades read that Secret back, so the token stays put and clients keep working. `NOTES.txt` prints the command that reads it.
+
+The read is a `lookup`, which only answers when Helm is talking to a live cluster. Under `helm template`, ArgoCD, or any other render-then-apply tool it comes back empty and a fresh token is rendered every time, which leaves the application permanently OutOfSync. Set `auth.existingSecret` to a Secret you manage in those places.
+
+`auth.token` overrides both and is meant for throwaway clusters. `auth.generate: false` leaves the shared secret out entirely, which is what you want when `auth.serviceAccounts.enabled` is the only credential.
 
 For clients outside the cluster, enable the Ingress:
 
 ```bash
 helm upgrade -i mc-mcp-server oci://junhyung.cloud/library/charts/mc-mcp-server \
   --version <tag> --namespace mcp \
-  --set auth.existingSecret=mc-mcp-server-auth \
   --set ingress.enabled=true \
   --set ingress.className=traefik \
   --set ingress.host=mc-mcp-server.example.com
@@ -38,9 +44,10 @@ helm upgrade -i mc-mcp-server oci://junhyung.cloud/library/charts/mc-mcp-server 
 | `serviceAccount.name` | `""` | Empty derives one from the release name |
 | `serviceAccount.automountToken` | `false` | Raised automatically when service account auth is on |
 | `auth.enabled` | `true` | Check `Authorization: Bearer` |
+| `auth.generate` | `true` | Make a token when none is given, and keep it across upgrades |
 | `auth.existingSecret` | `""` | When set, the chart creates no Secret |
 | `auth.secretKey` | `token` | Key inside that Secret |
-| `auth.token` | `""` | Plaintext token, for convenience only |
+| `auth.token` | `""` | Plaintext token, which wins over `auth.generate` |
 | `auth.serviceAccounts.enabled` | `false` | Accept Kubernetes service account tokens via TokenReview |
 | `auth.serviceAccounts.allowed` | `[]` | `namespace:name` entries; empty admits any authenticated one |
 | `mcp.path` | `/mcp` | Path the MCP endpoint is served at |

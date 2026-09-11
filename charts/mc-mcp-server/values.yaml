@@ -26,10 +26,17 @@ serviceAccount:
   # This server does not call the Kubernetes API, so there is no reason to mount a token.
   automountToken: false
 
-# Shared secret bearer token. The chart never generates one: a value that changes every render
-# leaves ArgoCD permanently OutOfSync. Set existingSecret or token; leaving both empty fails.
+# Shared secret bearer token.
 auth:
   enabled: true
+  # Make a token when neither existingSecret nor token is given. The chart reads back the Secret
+  # it already owns, so the value survives upgrades instead of changing on every render. Read it
+  # with the kubectl line NOTES.txt prints.
+  #
+  # That read only works when Helm reaches a live cluster. Under `helm template`, ArgoCD, or any
+  # other render-then-apply tool the lookup comes back empty and a new token is produced every
+  # time, which leaves the application permanently OutOfSync. Use existingSecret there.
+  generate: true
   # An in-cluster agent already carries a service account token. Verifying it with a TokenReview
   # removes the need to distribute a shared secret, and the caller's name lands in join-server's
   # owner field. Enabling this adds a ClusterRoleBinding to system:auth-delegator.
@@ -40,7 +47,7 @@ auth:
   # Name of an existing Secret. When set, the chart creates none.
   existingSecret: ""
   secretKey: token
-  # Plaintext token for convenience. Use existingSecret anywhere real.
+  # Plaintext token, which wins over generate. Use existingSecret anywhere real.
   token: ""
 
 mcp:

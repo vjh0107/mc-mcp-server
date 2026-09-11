@@ -55,6 +55,35 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 {{- end -}}
 
+{{/*
+The token the chart puts in the Secret it owns. Order: an explicit auth.token, then the value
+already stored in that Secret, then a fresh random one.
+
+Reading the Secret back is what keeps the generated token stable across upgrades. Without it a
+new value would be rendered every time, the pod would restart, and every client that already
+holds a token would start getting 401s.
+
+The lookup only works when Helm talks to a live cluster. Renderers that template first and apply
+later -- `helm template`, ArgoCD, and anything built on them -- get an empty result and therefore
+a brand new token on every render. Set auth.existingSecret there.
+
+Call this from exactly one template. Each call that falls through to randAlphaNum produces a
+different value.
+*/}}
+{{- define "mc-mcp-server.authToken" -}}
+{{- if .Values.auth.token -}}
+{{- .Values.auth.token -}}
+{{- else -}}
+{{- $name := include "mc-mcp-server.authSecretName" . -}}
+{{- $existing := (lookup "v1" "Secret" .Release.Namespace $name).data -}}
+{{- if and $existing (hasKey $existing .Values.auth.secretKey) -}}
+{{- index $existing .Values.auth.secretKey | b64dec -}}
+{{- else -}}
+{{- randAlphaNum 32 -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "mc-mcp-server.needsApiAccess" -}}
 {{- if .Values.auth.serviceAccounts.enabled -}}true{{- end -}}
 {{- end -}}
@@ -67,8 +96,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- if gt (int .Values.replicaCount) 1 -}}
 {{- fail "replicaCount must stay 1: bot sessions live in the pod's memory, so a second pod would not see them" -}}
 {{- end -}}
-{{- if and .Values.auth.enabled (not .Values.auth.existingSecret) (not .Values.auth.token) (not .Values.auth.serviceAccounts.enabled) -}}
-{{- fail "auth.enabled is true but no credential is configured: set auth.existingSecret, auth.token, or auth.serviceAccounts.enabled" -}}
+{{- if and .Values.auth.enabled (not .Values.auth.existingSecret) (not .Values.auth.token) (not .Values.auth.generate) (not .Values.auth.serviceAccounts.enabled) -}}
+{{- fail "auth.enabled is true but no credential is configured: set auth.generate, auth.existingSecret, auth.token, or auth.serviceAccounts.enabled" -}}
 {{- end -}}
 {{- if and .Values.ingress.enabled (not .Values.ingress.host) -}}
 {{- fail "ingress.enabled is true but ingress.host is empty" -}}

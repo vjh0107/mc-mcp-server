@@ -86,8 +86,8 @@ jobs:
           REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
           TAG: ${{ steps.tag.outputs.value }}
         run: |
-          helm lint charts/mc-mcp-server --set auth.token=lint-only
-          helm template charts/mc-mcp-server --set auth.token=lint-only > /dev/null
+          helm lint charts/mc-mcp-server
+          helm template charts/mc-mcp-server > /dev/null
           helm package charts/mc-mcp-server --version "$TAG" --app-version "$TAG" --destination dist-chart
           printf '%s' "$REGISTRY_PASSWORD" \
             | helm registry login "$REGISTRY" --username "$REGISTRY_USERNAME" --password-stdin

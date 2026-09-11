@@ -88,7 +88,7 @@ spec:
             - name: SA_AUTH_ALLOWED
               value: {{ join "," .Values.auth.serviceAccounts.allowed | quote }}
             {{- end }}
-            {{- if and .Values.auth.enabled (or .Values.auth.existingSecret .Values.auth.token) }}
+            {{- if and .Values.auth.enabled (or .Values.auth.existingSecret .Values.auth.token .Values.auth.generate) }}
             - name: MCP_AUTH_TOKEN
               valueFrom:
                 secretKeyRef:
